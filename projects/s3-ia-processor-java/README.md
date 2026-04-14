@@ -20,9 +20,19 @@ Procesador de imágenes y documentos con **IA nativa** usando tecnología **Java
 
 ---
 
-**Cómo compilar el JAR:**
+## Cómo compilar el JAR:
+
+Desde la línea de comandos, clone y compile el proyecto:
 
 ```bash
+# Clone this repository
+git clone https://github.com/rsalgadoc/aws-projects.git
+
+# Go into the repository
+cd projects\s3-ia-processor-java
+
+
+# Cleans the build directory and packages the compiled code into a distributable format
 mvn clean package
 ```
 
@@ -31,19 +41,19 @@ target/s3-ia-processor-1.0.0-aws-lambda.jar
 
 ## Cómo desplegar
 
-1. Crear un bucket llamado: s3-ia-processor-java-artifacts
+1. Crear un bucket llamado: **s3-ia-processor-java-artifacts**
 2. Sube el JAR(s3-ia-processor-1.0.1-aws-lambda.jar) a el bucket S3 recien creado.
 3. Despliega la plantilla [template.yaml](template.yaml) CloudFormation por por Consola, en la opcion: **CloudFormation > Stacks > Create stack**
 4. **Choose an existing template > Upload a template file > Choose file**
 5. En la seccion Specify stack details, asegurate de que el nombre del parametro LambdaCodeBucket corresponda al nombre del bucket donde subiste el jar.
 6. Una vez que el estado del stack este en CREATE_COMPLETE, revisa la seccion Resources y asegurate que este creado 4 recursos: 
-- InputBucket
-- LambdaExecutionRole
-- OutputBucket
-- ProcesadorIAFunction
-7. Ahora ir a Amazon S3 > Buckets > s3-ia-processor-java-input 
-8. En la pestaña de Properties ir a la seccion : Event notifications > Create event notification, con el nombre de s3-ia-processor-java-event
-9. Selecciona All object create events, y en Lambda function selcciona la funcion Lambda recien creada, s3-ia-processor-java, y hacer click en Save changes
+    - InputBucket
+    - LambdaExecutionRole
+    - OutputBucket
+    - ProcesadorIAFunction
+7. Ahora ir a:  **Amazon S3 > Buckets > s3-ia-processor-java-input** 
+8. En la pestaña de Properties ir a la seccion : **Event notifications > Create event notification**, con el nombre de s3-ia-processor-java-event
+9. Selecciona All object create events, y en Lambda function selcciona la funcion Lambda recien creada, s3-ia-processor-java, y hacer click en **Save changes**
 
 ## Cómo probar
 
