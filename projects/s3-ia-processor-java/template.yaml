@@ -9,7 +9,7 @@ Parameters:
   LambdaCodeBucket:
     Type: String
     Default: s3-ia-processor-java-artifacts
-    Description: Nombre del bucket donde está el código.
+    Description: Nombre del bucket donde esta el codigo.
 
 Resources:
   InputBucket:
@@ -68,7 +68,7 @@ Resources:
       MemorySize: 1024
       Code:
         S3Bucket: !Ref LambdaCodeBucket   # ← Debes crear este bucket o subir manualmente
-        S3Key: s3-ia-processor-1.0.0-aws-lambda.jar
+        S3Key: s3-ia-processor-1.0.1-aws-lambda.jar
 
 Outputs:
   InputBucket:

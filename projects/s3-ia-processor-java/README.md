@@ -1,20 +1,26 @@
-# s3-ia-processor-java
+# **S3 Image & Document Processor - Java**
 
-Procesador automático de imágenes y documentos con IA usando Java 21.
+Procesador de imágenes y documentos con **IA nativa** usando tecnología **Java 17** y arquitectura serverless.
 
-Al subir un archivo a un bucket de S3 (input), se activa una Lambda que:
-- Usa **Rekognition** si es imagen
-- Usa **Textract** si es documento (PDF, PNG, JPG, TIFF)
-- Guarda el resultado en JSON en el bucket de output
+**Características:**
+- 🖼️ Análisis de imágenes con Amazon Rekognition
+- 📄 Extracción de texto con AWS Textract
+- 📦 Paquete optimizado para Lambda
 
-## Tecnologías
-- Java 21
-- AWS SDK for Java 2.x
-- Maven + Shade Plugin
-- CloudFormation
-- Amazon S3, Lambda, Rekognition, Textract
+**Stack:**
+- **Compute:** AWS Lambda (Java 17)
+- **Storage:** Amazon S3
+- **AI Services:** Amazon Rekognition, AWS Textract
+- **Infrastructure:** AWS CloudFormation
+- **Build:** Maven
 
-## Cómo compilar el JAR
+**Requisitos:**
+- Java 17+
+- Maven 3.8+
+
+---
+
+**Cómo compilar el JAR:**
 
 ```bash
 mvn clean package
@@ -25,17 +31,25 @@ target/s3-ia-processor-1.0.0-aws-lambda.jar
 
 ## Cómo desplegar
 
-1. Compila el proyecto (mvn clean package)
-2. Sube el JAR a un bucket S3 o úsalo localmente
-3. Despliega la plantilla CloudFormation:
+1. Crear un bucket llamado: s3-ia-processor-java-artifacts
+2. Sube el JAR(s3-ia-processor-1.0.1-aws-lambda.jar) a el bucket S3 recien creado.
+3. Despliega la plantilla [template.yaml](template.yaml) CloudFormation por por Consola, en la opcion: **CloudFormation > Stacks > Create stack**
+4. **Choose an existing template > Upload a template file > Choose file**
+5. En la seccion Specify stack details, asegurate de que el nombre del parametro LambdaCodeBucket corresponda al nombre del bucket donde subiste el jar.
+6. Una vez que el estado del stack este en CREATE_COMPLETE, revisa la seccion Resources y asegurate que este creado 4 recursos: 
+- InputBucket
+- LambdaExecutionRole
+- OutputBucket
+- ProcesadorIAFunction
+7. Ahora ir a Amazon S3 > Buckets > s3-ia-processor-java-input 
+8. En la pestaña de Properties ir a la seccion : Event notifications > Create event notification, con el nombre de s3-ia-processor-java-event
+9. Selecciona All object create events, y en Lambda function selcciona la funcion Lambda recien creada, s3-ia-processor-java, y hacer click en Save changes
 
-    ```bash
-    aws cloudformation create-stack --stack-name s3-ia-processor-java \
-    --template-body file://template.yaml \
-    --capabilities CAPABILITY_IAM
-    ```
-## Estructura del proyecto
+## Cómo probar
 
-- pom.xml
-- template.yaml
-- src/main/java/io/github/rsalgadoc/lambda/S3EventProcessor.java
+Al subir un archivo a un bucket de S3 (`input`), se activa automáticamente una función Lambda que:
+- Si es una **imagen** (.jpg, .jpeg, .png, etc.) → usa **Amazon Rekognition** para detectar etiquetas.
+- Si es un **documento** (.pdf, .png, .jpg, .jpeg, .tiff) → usa **Amazon Textract** para extraer texto, tablas y formularios.
+- Guarda el resultado del análisis en formato JSON en el bucket de salida (`output`).
+
+Ejemplo de resultado : [m_26JM3_8628.jpg.txt](examples/resultados/m_26JM3_8628.jpg.txt)

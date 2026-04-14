@@ -1,0 +1,77 @@
+{
+  "bucket": "s3-ia-processor-java-input-822127610886",
+  "tipo": "imagen",
+  "archivo": "m_26JM3_8628.jpg",
+  "analisis": {
+    "etiquetas": [
+      {
+        "confianza": 100.0,
+        "nombre": "Field"
+      },
+      {
+        "confianza": 99.57,
+        "nombre": "Nature"
+      },
+      {
+        "confianza": 99.57,
+        "nombre": "Outdoors"
+      },
+      {
+        "confianza": 98.64,
+        "nombre": "Person"
+      },
+      {
+        "confianza": 97.84,
+        "nombre": "Adult"
+      },
+      {
+        "confianza": 97.84,
+        "nombre": "Male"
+      },
+      {
+        "confianza": 97.84,
+        "nombre": "Man"
+      },
+      {
+        "confianza": 89.9,
+        "nombre": "Clothing"
+      },
+      {
+        "confianza": 89.9,
+        "nombre": "Footwear"
+      },
+      {
+        "confianza": 89.9,
+        "nombre": "Shoe"
+      },
+      {
+        "confianza": 89.0,
+        "nombre": "Helmet"
+      },
+      {
+        "confianza": 86.13,
+        "nombre": "Golf"
+      },
+      {
+        "confianza": 86.13,
+        "nombre": "Sport"
+      },
+      {
+        "confianza": 84.99,
+        "nombre": "Golf Course"
+      },
+      {
+        "confianza": 80.13,
+        "nombre": "Playing Golf"
+      }
+    ]
+  },
+  "timestamp": {
+    "iMillis": 1776195711494,
+    "iChronology": {
+      "iBase": {
+        "iMinDaysInFirstWeek": 4
+      }
+    }
+  }
+}
