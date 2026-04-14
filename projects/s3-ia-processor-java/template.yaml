@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 IA Processor con Java 17 - CloudFormation Puro
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: s3-ia-processor-java
+    Description: Nombre base del proyecto
+  LambdaCodeBucket:
+    Type: String
+    Default: s3-ia-processor-java-artifacts
+    Description: Nombre del bucket donde está el código.
+
+Resources:
+  InputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${ProjectName}-input-${AWS::AccountId}"
+
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${ProjectName}-output-${AWS::AccountId}"
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource:
+                  - !Sub "arn:aws:s3:::${ProjectName}-input-${AWS::AccountId}/*"
+                  - !Sub "arn:aws:s3:::${ProjectName}-output-${AWS::AccountId}/*"
+        - PolicyName: RekognitionTextract
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rekognition:DetectLabels
+                  - rekognition:DetectText
+                  - textract:AnalyzeDocument
+                Resource: "*"
+
+  ProcesadorIAFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}"
+      Runtime: java17
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: io.github.rsalgadoc.lambda.S3EventProcessor::handleRequest
+      Timeout: 90
+      MemorySize: 1024
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket   # ← Debes crear este bucket o subir manualmente
+        S3Key: s3-ia-processor-1.0.0-aws-lambda.jar
+
+Outputs:
+  InputBucket:
+    Value: !Ref InputBucket
+  OutputBucket:
+    Value: !Ref OutputBucket
+  LambdaFunction:
+    Value: !Ref ProcesadorIAFunction

@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sistema de Procesamiento de Imágenes/Documentos con IA - CloudFormation Puro (sin circular dependency)
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: s3-ia-processor-python
+    Description: Nombre único del proyecto (cámbialo si da error de bucket existente)
+
+Resources:
+
+  # ==================== BUCKETS S3 ====================
+  InputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${ProjectName}-input-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "${ProjectName}-output-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ==================== ROL IAM ====================
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${ProjectName}-input-${AWS::AccountId}/*"
+                  - !Sub "arn:aws:s3:::${ProjectName}-output-${AWS::AccountId}/*"
+        - PolicyName: RekognitionAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rekognition:DetectLabels
+                  - rekognition:DetectText
+                Resource: "*"
+        - PolicyName: TextractAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: textract:AnalyzeDocument
+                Resource: "*"
+
+  # ==================== FUNCIÓN LAMBDA ====================
+  ProcesadorIAFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}"
+      Runtime: python3.12
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: index.lambda_handler
+      Timeout: 60
+      MemorySize: 512
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          from urllib.parse import unquote_plus
+
+          s3_client = boto3.client('s3')
+          rekognition = boto3.client('rekognition')
+          textract = boto3.client('textract')
+
+          def lambda_handler(event, context):
+              record = event['Records'][0]
+              bucket = record['s3']['bucket']['name']
+              key = unquote_plus(record['s3']['object']['key'])
+
+              print(f"Procesando: s3://{bucket}/{key}")
+
+              extension = key.lower().split('.')[-1]
+              resultado = {
+                  "archivo": key,
+                  "bucket": bucket,
+                  "tipo": None,
+                  "analisis": None,
+                  "timestamp": record.get('eventTime')
+              }
+
+              try:
+                  if extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
+                      resultado['tipo'] = 'imagen'
+                      resp = rekognition.detect_labels(
+                          Image={'S3Object': {'Bucket': bucket, 'Name': key}},
+                          MaxLabels=20, MinConfidence=70
+                      )
+                      labels = [{"nombre": l['Name'], "confianza": round(l['Confidence'], 2)} for l in resp.get('Labels', [])]
+                      resultado['analisis'] = {"etiquetas": labels}
+
+                  elif extension in ['pdf', 'png', 'jpg', 'jpeg', 'tiff']:
+                      resultado['tipo'] = 'documento'
+                      resp = textract.analyze_document(
+                          Document={'S3Object': {'Bucket': bucket, 'Name': key}},
+                          FeatureTypes=['TABLES', 'FORMS', 'LAYOUT']
+                      )
+                      texto = [b.get('Text', '') for b in resp.get('Blocks', []) if b.get('BlockType') == 'LINE']
+                      resultado['analisis'] = {
+                          "texto_extraido": " ".join(texto),
+                          "tablas_detectadas": sum(1 for b in resp.get('Blocks', []) if b.get('BlockType') == 'TABLE')
+                      }
+                  else:
+                      resultado['tipo'] = 'no_soportado'
+                      resultado['error'] = f"Extensión .{extension} no soportada"
+              except Exception as e:
+                  resultado['error'] = str(e)
+                  print(f"Error procesando {key}: {str(e)}")
+
+              # Guardar resultado
+              output_bucket = f"{bucket.replace('-input-', '-output-')}"
+              output_key = f"resultados/{key}.json"
+              s3_client.put_object(
+                  Bucket=output_bucket,
+                  Key=output_key,
+                  Body=json.dumps(resultado, indent=2, ensure_ascii=False),
+                  ContentType='application/json'
+              )
+              print(f"Resultado guardado: {output_key}")
+              return resultado
+
+  # ==================== PERMISO PARA S3 INVOCAR LAMBDA ====================
+  S3InvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ProcesadorIAFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${ProjectName}-input-${AWS::AccountId}"   # ARN manual para evitar círculo
+
+Outputs:
+  InputBucketName:
+    Value: !Ref InputBucket
+    Description: Sube aquí tus imágenes y documentos (el trigger se activa automáticamente)
+  OutputBucketName:
+    Value: !Ref OutputBucket
+  LambdaFunctionName:
+    Value: !Ref ProcesadorIAFunction
