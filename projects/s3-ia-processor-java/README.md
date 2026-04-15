@@ -51,9 +51,6 @@ target/s3-ia-processor-1.0.0-aws-lambda.jar
     - LambdaExecutionRole
     - OutputBucket
     - ProcesadorIAFunction
-7. Ahora ir a:  **Amazon S3 > Buckets > s3-ia-processor-java-input** 
-8. En la pestaña de Properties ir a la seccion : **Event notifications > Create event notification**, con el nombre de s3-ia-processor-java-event
-9. Selecciona All object create events, y en Lambda function selcciona la funcion Lambda recien creada, s3-ia-processor-java, y hacer click en **Save changes**
 
 ## Cómo probar
 

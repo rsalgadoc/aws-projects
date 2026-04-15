@@ -17,6 +17,10 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       BucketName: !Sub "${ProjectName}-input-${AWS::AccountId}"
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt ProcesadorIAFunction.Arn
 
   OutputBucket:
     Type: AWS::S3::Bucket
@@ -69,6 +73,13 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaCodeBucket   # ← Debes crear este bucket o subir manualmente
         S3Key: s3-ia-processor-1.0.1-aws-lambda.jar
+  S3InvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProcesadorIAFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${ProjectName}-input-${AWS::AccountId}"   # ARN manual para evitar círculo
 
 Outputs:
   InputBucket:
