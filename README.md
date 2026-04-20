@@ -72,6 +72,7 @@ aws-projects/
 
 Cada proyecto contiene su propio README con detalles específicos:
 
+- [S3 IA Processor - FE - Next.js](https://github.com/rsalgadoc/s3-ia-processor-fe-nextjs)
 - [S3 IA Processor - Java](projects/s3-ia-processor-java/README.md)
 - [S3 IA Processor - Python](projects/s3-ia-processor-python/README.md)
 
