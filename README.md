@@ -1,8 +1,8 @@
 # AWS Serverless Projects
 
 [![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://openjdk.java.net/)
-[![Python](https://img.shields.io/badge/Python-3.12+-green?logo=python)](https://python.org)
 [![AWS](https://img.shields.io/badge/AWS-Lambda-FF9900?logo=amazon-aws)](https://aws.amazon.com/lambda/)
+[![AWS Amplify](https://img.shields.io/badge/AWS-Amplify-46C3D0?logo=amazon-amplify)](https://aws.amazon.com/amplify/)
 [![AWS S3](https://img.shields.io/badge/AWS-S3-569A31?logo=amazon-s3)](https://aws.amazon.com/s3/)
 [![AWS Rekognition](https://img.shields.io/badge/AI-Rekognition-FF9900?logo=amazon-aws)](https://aws.amazon.com/rekognition/)
 [![AWS Textract](https://img.shields.io/badge/AI-Textract-FF9900?logo=amazon-aws)](https://aws.amazon.com/textract/)
@@ -13,6 +13,21 @@
 > 🚀 Monorepo con proyectos de **AWS Serverless** e **Inteligencia Artificial** para procesamiento de imágenes y documentos con **Amazon Rekognition** y **AWS Textract**.
 
 ---
+
+# Arquitectura de Procesamiento Serverless de Imágenes y Documentos con AWS
+
+Este proyecto utiliza una arquitectura serverless en AWS para gestionar la carga, autenticación y análisis automático de medios.
+
+![Arquitectura del Proyecto](./shared/utils/img/aws-serverless-projects-diagram.png)
+
+## Flujo del Sistema
+1. **Frontend**: Desarrollado con **AWS Amplify Gen 2**.
+2. **Auth**: Gestión de usuarios vía **Amazon Cognito**.
+3. **Ingesta**: Los archivos se suben a un bucket de **Amazon S3**.
+4. **Procesamiento**: Una función **Lambda** se activa para analizar el contenido:
+   - Si es imagen: Usa **Amazon Rekognition**.
+   - Si es documento: Usa **Amazon Textract**.
+
 
 ## 📋 Tabla de Contenidos
 
